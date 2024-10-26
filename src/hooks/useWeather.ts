@@ -1,6 +1,8 @@
 import axios from "axios";
 import {z} from 'zod'
+//import {object, string, number, InferOutput, parse} from 'valibot'
 import { SearchType } from "../types";
+import { useMemo, useState } from "react";
 
 /* function isWeatherResponse(weather: unknown) : weather is Weather{
     return (
@@ -23,12 +25,31 @@ const Weather = z.object({
     })
 })
 
-type Weather = z.infer<typeof Weather>
+export type Weather = z.infer<typeof Weather>
 
 
+//valibot (otra opcion en vez de utilizar zod)
+/* const WeatherSchema = object({
+    name: string(),
+    main: object({
+        temp: number(),
+        temp_max: number(),
+        temp_min: number()
+    })
+})
 
+type Weather = InferOutput<typeof WeatherSchema> */
 
 export default function useWeather() {
+
+    const [weather, setWeather] = useState<Weather>({
+        name: '',
+        main: {
+            temp: 0,
+            temp_max: 0,
+            temp_min: 0
+        }
+    })
 
     const fetchWeather = async (search: SearchType)=> {
         
@@ -58,10 +79,22 @@ export default function useWeather() {
                const result = Weather.safeParse(weatherResult)
 
                if(result.success){
-                    console.log(result.data.name);
+                    setWeather(result.data)
                     
                }
+
+                //Valibot
+               /* const {data: weatherResult} = await axios(weatherUrl)
+               const result = parse(WeatherSchema,weatherResult)
+
+                if(result){
+
+                    console.log(result.name);
+                } */
+                    
                
+               
+
             
         } catch (error) {
             console.log(error);
@@ -70,7 +103,11 @@ export default function useWeather() {
         
     }
 
+    const hasWeatherData = useMemo(()=> weather.name , [weather])
+
     return {
-        fetchWeather
+        weather,
+        fetchWeather,
+        hasWeatherData
     }
 }
