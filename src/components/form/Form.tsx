@@ -33,6 +33,8 @@ const Form = ({fetchWeather} : FormProps) => {
             return
         }
 
+        setAlertError('')
+
         fetchWeather(search)
     }
 

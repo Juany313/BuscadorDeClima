@@ -40,26 +40,42 @@ export type Weather = z.infer<typeof Weather>
 
 type Weather = InferOutput<typeof WeatherSchema> */
 
-export default function useWeather() {
-
-    const [weather, setWeather] = useState<Weather>({
-        name: '',
+const initialState = {
+    name: '',
         main: {
             temp: 0,
             temp_max: 0,
             temp_min: 0
         }
-    })
+}
+export default function useWeather() {
+
+    //Estados locales
+    const [weather, setWeather] = useState<Weather>(initialState)
+    const [loading, setLoading] = useState(false)
+    const [notFound, setNotFound] = useState(false)
 
     const fetchWeather = async (search: SearchType)=> {
         
         const appId=import.meta.env.VITE_API_KEY
-        
+
+        //Para que desaparezca la alerta
+        setNotFound(false)
+        //Spinner de carga
+        setLoading(true)
+        //para que se desmonte el componente de la busqueda anterior
+        setWeather(initialState)
         try {
 
-            const geoUrl =`http://api.openweathermap.org/geo/1.0/direct?q=${search.city},${search.country}&appid=${appId}`
+            const geoUrl =`https://api.openweathermap.org/geo/1.0/direct?q=${search.city},${search.country}&appid=${appId}`
             const {data} = await axios(geoUrl)
             
+            //Comprobar si existe
+            if(!data[0]){
+                setNotFound(true)
+                return
+            }
+
             const lat = data[0].lat
             const lon = data[0].lon
             const weatherUrl= `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${appId}`
@@ -91,14 +107,12 @@ export default function useWeather() {
 
                     console.log(result.name);
                 } */
-                    
-               
-               
-
-            
+             
         } catch (error) {
             console.log(error);
-            
+        } finally {
+            //Desaparecer Spinner de carga
+            setLoading(false)
         }
         
     }
@@ -107,6 +121,8 @@ export default function useWeather() {
 
     return {
         weather,
+        loading,
+        notFound,
         fetchWeather,
         hasWeatherData
     }
